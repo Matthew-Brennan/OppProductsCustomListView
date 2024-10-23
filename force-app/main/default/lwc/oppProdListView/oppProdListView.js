@@ -114,17 +114,21 @@ export default class OppProductsTable extends LightningElement {
             console.log(JSON.stringify(event.detail.draftValues));
             if (draftValue.hasOwnProperty('productDetails')) {
                 fields[PRODUCT_DETAILS_FIELD.fieldApiName] = draftValue.productDetails;
+                console.log(draftValue.productDetails);
             }
             if (draftValue.hasOwnProperty('expirationDate')) {
                 fields[EXPIRATION_DATE_FIELD.fieldApiName] = draftValue.expirationDate;
+                console.log(draftValue.expirationDate);
             }
             if (draftValue.hasOwnProperty('warrantyYears')) {
                 fields[WARRANTY_YEARS_FIELD.fieldApiName] = draftValue.warrantyYears;
+                console.log(draftValue.warrantyYears);
             }
-            
+            console.log(fields);
             records.push({ fields });
         });
     
+        console.log('Record Data:', JSON.stringify(records));
         try {
             const promises = records.map(recordInput => updateRecord(recordInput));
             await Promise.all(promises);
@@ -150,10 +154,13 @@ export default class OppProductsTable extends LightningElement {
             let errorMessage = 'Error updating records';  // Default error message
     
             // Check for different error structures
-            if (error && error.body && error.body.message) {
-                errorMessage = error.body.message;
-            } else if (error && error.message) {
-                errorMessage = error.message;
+            // if (error && error.body && error.body.message) {
+            //     errorMessage = error.body.message;
+            // } else if (error && error.message) {
+            //     errorMessage = error.message;
+            // }
+            if (error && error.body && error.body.output && error.body.output.fieldErrors) {
+                console.error('Field Errors:', error.body.output.fieldErrors);
             }
     
             this.dispatchEvent(
@@ -166,6 +173,7 @@ export default class OppProductsTable extends LightningElement {
         } finally {
             this.isLoading = false;
         }
+        
     }
 
     handleBulkAction() {
