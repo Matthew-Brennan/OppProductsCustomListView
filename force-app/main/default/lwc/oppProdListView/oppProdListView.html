@@ -1,0 +1,70 @@
+<template>
+    <div class="slds-card">
+        <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <span class="slds-text-heading_medium">Opportunity Products</span>
+                    </h2>
+                </div>
+            </header>
+        </div>
+        
+        <div class="slds-card__body">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+            
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <h2>Error loading records: {error.body.message}</h2>
+                </div>
+            </template>
+
+            <template if:true={noError}>
+                <lightning-datatable
+                    key-field="id"
+                    data={pageRecords}
+                    columns={columns}
+                    draft-values={draftValues}
+                    onsave={handleSave}
+                    show-row-number-column={showRowNumberColumn}
+                    onrowselection={handleRowSelection}
+                    onrowaction={handleRowAction}
+                    >
+                </lightning-datatable>
+
+                <div class="slds-grid slds-grid_align-spread slds-p-around_small">
+                    <div class="slds-col">
+                        <span>{currentPageInfo}</span>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-button-group>
+                            <lightning-button 
+                                label="First" 
+                                onclick={firstPage} 
+                                disabled={isFirstPage}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Previous" 
+                                onclick={previousPage} 
+                                disabled={isFirstPage}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Next" 
+                                onclick={nextPage} 
+                                disabled={isLastPage}>
+                            </lightning-button>
+                            <lightning-button 
+                                label="Last" 
+                                onclick={lastPage} 
+                                disabled={isLastPage}>
+                            </lightning-button>
+                        </lightning-button-group>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
