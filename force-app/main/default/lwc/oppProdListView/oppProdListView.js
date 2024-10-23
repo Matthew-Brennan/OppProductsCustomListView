@@ -2,6 +2,7 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { updateRecord } from 'lightning/uiRecordApi';
+import { refreshApex } from '@salesforce/apex';
 import getOppProds from '@salesforce/apex/OppProdListViewController.getOppProds';
 import updateRows from '@salesforce/apex/OppProdListViewController.updateRows';
 
@@ -68,7 +69,9 @@ export default class OppProductsTable extends LightningElement {
 
     // Wire the Apex method
     @wire(getOppProds)
-    wiredOppProducts({ error, data }) {
+    wiredOppProducts(result) {
+        this.wiredOppProductsResult = result; // Store the result
+        const { error, data } = result;
         if (data) {
             this.processRecords(data);
             this.error = undefined;
@@ -111,24 +114,19 @@ export default class OppProductsTable extends LightningElement {
         event.detail.draftValues.forEach(draftValue => {
             const fields = {};
             fields[ID_FIELD.fieldApiName] = draftValue.id;
-            console.log(JSON.stringify(event.detail.draftValues));
+            
             if (draftValue.hasOwnProperty('productDetails')) {
                 fields[PRODUCT_DETAILS_FIELD.fieldApiName] = draftValue.productDetails;
-                console.log(draftValue.productDetails);
             }
             if (draftValue.hasOwnProperty('expirationDate')) {
                 fields[EXPIRATION_DATE_FIELD.fieldApiName] = draftValue.expirationDate;
-                console.log(draftValue.expirationDate);
             }
             if (draftValue.hasOwnProperty('warrantyYears')) {
                 fields[WARRANTY_YEARS_FIELD.fieldApiName] = draftValue.warrantyYears;
-                console.log(draftValue.warrantyYears);
             }
-            console.log(fields);
             records.push({ fields });
         });
     
-        console.log('Record Data:', JSON.stringify(records));
         try {
             const promises = records.map(recordInput => updateRecord(recordInput));
             await Promise.all(promises);
@@ -144,23 +142,17 @@ export default class OppProductsTable extends LightningElement {
             // Clear draft values
             this.draftValues = [];
     
-            // Refresh the data
+            // Refresh the data to show updated rows
             const result = await getOppProds();
-            this.processRecords(result);
+            this.processRecords(result); // Re-process the records to refresh the table
+            await this.refreshData();
     
         } catch (error) {
-            // Improved error logging and handling
-            console.error('Error updating records:', error);
-            let errorMessage = 'Error updating records';  // Default error message
-    
-            // Check for different error structures
-            // if (error && error.body && error.body.message) {
-            //     errorMessage = error.body.message;
-            // } else if (error && error.message) {
-            //     errorMessage = error.message;
-            // }
-            if (error && error.body && error.body.output && error.body.output.fieldErrors) {
-                console.error('Field Errors:', error.body.output.fieldErrors);
+            let errorMessage = 'Error updating records';
+            if (error && error.body && error.body.message) {
+                errorMessage = error.body.message;
+            } else if (error && error.message) {
+                errorMessage = error.message;
             }
     
             this.dispatchEvent(
@@ -253,5 +245,12 @@ export default class OppProductsTable extends LightningElement {
             default:
                 break;
         }
+    }
+
+    // requery to refresh the data
+    async refreshData() {
+        this.isLoading = true; // Set loading state
+        await refreshApex(this.wiredOppProductsResult); // Refresh the wired data
+        this.isLoading = false; // Reset loading state
     }
 }

@@ -9,6 +9,14 @@
                 </div>
             </header>
         </div>
+        <lightning-button-icon
+            icon-name="utility:refresh"
+            alternative-text="Refresh"
+            title="Refresh"
+            onclick={refreshData}
+            class="slds-m-top_medium"
+            style="padding-right: 14px;"
+        ></lightning-button-icon>
         
         <div class="slds-card__body">
             <template if:true={isLoading}>
